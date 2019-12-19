@@ -8,7 +8,6 @@ import win32gui
 import requests
 import win32con
 import wx, os, win32api
-import sys
 import pyperclip
 from urllib import request
 
@@ -27,8 +26,8 @@ cookiestrHead = r'ki1e_2132_connect_is_bind=1; ki1e_2132_smile=1D1; ki1e_2132_at
 packages = [('jessica alba', 'pomona', '1981', 'test')]
 # keyword = ['速度', 'bug', '快', '招行', '水', '有了', '好价', '赶紧', '作业', '速撸', '撒果', '首发', '平行', '神价', '线报', '爱奇艺', '周卡', '月卡',
 #            '可以', '冲']
-keyword = ['速度', 'bug', '快', '水', '有了', '好价', '赶紧', '作业', '速撸', '撒果', '首发', '平行', '神价', '线报', '爱奇艺', '周卡', '月卡',
-           '可以', '冲']
+keyword = ['速度', 'bug', '快', '水', '有了', '好价', '赶紧', '作业', '速撸', '撒果', '首发', '平行', '神价', '线报', '爱奇艺', '好莱坞', '周卡', '月卡',
+           '可以', '冲', '招行抽奖']
 # 推送到钉钉
 isPostToDing = 1
 # 窗口气泡弹出
