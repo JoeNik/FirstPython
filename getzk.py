@@ -5,7 +5,8 @@ import time
 from urllib import request
 
 headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36'}
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36',
+    'Content-Type': 'application/json'}
 
 server = 'http://www.zuanke8.com/zuixin.php'
 
@@ -52,96 +53,107 @@ def isExistErrorLst(value):
 
 
 def get_contents(chapter):
-    req = request.Request(chapter)
-    # 设置cookie
-    req.add_header('cookie', cookiestrHead)
-    # 设置请求头
-    req.add_header('User-Agent',
-                   'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36')
+    try:
+        req = request.Request(chapter)
+        # 设置cookie
+        req.add_header('cookie', cookiestrHead)
+        # 设置请求头
+        req.add_header('User-Agent',
+                       'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36')
 
-    resp = request.urlopen(req)
+        resp = request.urlopen(req)
 
-    rlt = resp.read().decode('gbk')
-    soup = BeautifulSoup(rlt, 'html.parser')
+        rlt = resp.read().decode('gbk', 'ignore').encode('utf-8')
+        soup = BeautifulSoup(rlt, 'html.parser')
 
-    # req = requests.get(url=chapter)
-    # html = req.content
-    # print('xx:')
-    # html_doc = str(html, 'gbk')
-    # soup = BeautifulSoup(html_doc, 'html.parser')
+        # req = requests.get(url=chapter)
+        # html = req.content
+        # print('xx:')
+        # html_doc = str(html, 'gbk')
+        # soup = BeautifulSoup(html_doc, 'html.parser')
 
-    # a = soup.find('div', id='wp')
-    a = soup.find_all('table')
-    # print(a)
-    # write_txt("E:\\bReadyWorking\\gothonweb\\bin\\log.txt", str(a), 'utf8')
-    # print(chardet.detect(html))
-    for each in a:
-        try:
-            b = each.find('center')
-            # print('xxx:' + str(b))
-            if b != None:
-                x = b.string
-                if x <= '最新交流消息':
-                    c = each.select('tr')
-                    # print(each)
-                    # write_txt("E:\\bReadyWorking\\gothonweb\\bin\\log.txt", str(each), 'utf8')
-                    print(1 + len(c))
-                    for d in c:
-                        e = d.find_all('th')
-                        for f in e:
-                            g = f.find_all('a')
-                            iscontinue = False
-                            remark = ''
-                            for w in g:
-                                if (iscontinue):
-                                    iscontinue = False
-                                    continue
-                                ftitleTemp = w.string
-                                ftitle = w.string.replace('\n', '').encode('gbk')
-                                # print(ftitleTemp)
-                                # print('赚品交换'.encode('gbk'))
-                                # print(ftitle)
-                                fdic = ['赚品交换'.encode('gbk'), '果果换物'.encode('gbk'), '做任务赚果果'.encode('gbk'),
-                                        '邀请专区'.encode('gbk')]
-
-                                if (ftitle in fdic):
-                                    # if (ftitle == '赚品交换'.encode('gbk') or ftitle == '果果换物'.encode('gbk') or ftitle == '做任务赚果果'.encode('gbk')):
-                                    iscontinue = True
-                                    continue
-                                if (ftitle == '赚客大家谈'.encode('gbk') or ftitle == '活动线报'.encode(
-                                        'gbk') or ftitle == '活动秘籍'.encode('gbk') or ftitle == '求助咨询区'.encode('gbk')):
-                                    remark = ftitleTemp
-                                    #print(remark)
-                                else:
-                                    if not isExistErrorLst(w.get('href')):
-                                        (remark, comments, picurl) = get_onpage(w.get('href'), cookiestrHead)
-                                        for key in keyword:
-                                            if ftitleTemp.find(key) != -1:
-                                                print("匹配:" + key)
-                                                if not isExistLst(ftitleTemp):
-                                                    if isPostToDing == 1:
-                                                        print("send " + ftitleTemp)
-                                                        DingDingPost(ftitleTemp, remark, picurl, comments,
-                                                                     w.get('href'))
-                                        # write_db(ftitleTemp, w.get('href'), remark, comments)
-                                        # for key in keyword:
-                                        #     if ftitleTemp.find(key) != -1:
-                                        #         weSend(1, 'JoeNik', remark + ' ' + w.get('href'))
-                                        # id = getInsertId()
-
+        # a = soup.find('div', id='wp')
+        a = soup.find_all('table')
+        # print(a)
+        # write_txt("E:\\bReadyWorking\\gothonweb\\bin\\log.txt", str(a), 'utf8')
+        # print(chardet.detect(html))
+        ArgLst = []  # 文章信息列表
+        for each in a:
+            try:
+                b = each.find('center')
+                # print('xxx:' + str(b))
+                if b != None:
+                    x = b.string
+                    if x <= '最新交流消息':
+                        c = each.select('tr')
+                        # print(each)
+                        # write_txt("E:\\bReadyWorking\\gothonweb\\bin\\log.txt", str(each), 'utf8')
+                        print(1 + len(c))
+                        for d in c:
+                            e = d.find_all('th')
+                            for f in e:
+                                g = f.find_all('a')
+                                iscontinue = False
+                                remark = ''
+                                for w in g:
+                                    if (iscontinue):
+                                        iscontinue = False
+                                        continue
+                                    ftitleTemp = w.string
+                                    ftitle = w.string.replace('\n', '').encode('gbk')
                                     # print(ftitleTemp)
-                                    # print(w.get('href'))
-                                    # print('\r\n')
+                                    # print('赚品交换'.encode('gbk'))
+                                    # print(ftitle)
+                                    fdic = ['赚品交换'.encode('gbk'), '果果换物'.encode('gbk'), '做任务赚果果'.encode('gbk'),
+                                            '邀请专区'.encode('gbk')]
 
-                        # write_txt("E:\\bReadyWorking\\gothonweb\\bin\\log1.txt", str(g), 'utf8')
-                        # print(e)
-                        # if d.string <= '赚客大家谈':
-                        #     e = d.get('href')
-                        #     print(d.get('title'))
-                        # write_txt("E:\\bReadyWorking\\gothonweb\\bin\\log1.txt", str(e), 'utf8')
+                                    if (ftitle in fdic):
+                                        # if (ftitle == '赚品交换'.encode('gbk') or ftitle == '果果换物'.encode('gbk') or ftitle == '做任务赚果果'.encode('gbk')):
+                                        iscontinue = True
+                                        continue
+                                    if (ftitle == '赚客大家谈'.encode('gbk') or ftitle == '活动线报'.encode(
+                                            'gbk') or ftitle == '活动秘籍'.encode('gbk') or ftitle == '求助咨询区'.encode(
+                                        'gbk')):
+                                        remark = ftitleTemp
+                                        # print(remark)
+                                    else:
+                                        argUrl = w.get('href')
+                                        if not isExistErrorLst(argUrl):
+                                            (remark, comments, picurl) = get_onpage(argUrl, cookiestrHead)
+                                            for key in keyword:
+                                                if ftitleTemp.find(key) != -1:
+                                                    print("匹配:" + key)
+                                                    if not isExistLst(ftitleTemp):
+                                                        if isPostToDing == 1:
+                                                            print("send " + ftitleTemp)
+                                                            # DingDingPost(ftitleTemp, remark, picurl, comments,
+                                                            #              w.get('href'))
+                                                            ArgLst.append(
+                                                                GetDingMarkDownText(ftitleTemp, remark, comments,
+                                                                                    argUrl, picurl))
+                                            # write_db(ftitleTemp, w.get('href'), remark, comments)
+                                            # for key in keyword:
+                                            #     if ftitleTemp.find(key) != -1:
+                                            #         weSend(1, 'JoeNik', remark + ' ' + w.get('href'))
+                                            # id = getInsertId()
 
-        except Exception as e:
-            print('error:' + str(e))
+                                        # print(ftitleTemp)
+                                        # print(w.get('href'))
+                                        # print('\r\n')
+
+                            # write_txt("E:\\bReadyWorking\\gothonweb\\bin\\log1.txt", str(g), 'utf8')
+                            # print(e)
+                            # if d.string <= '赚客大家谈':
+                            #     e = d.get('href')
+                            #     print(d.get('title'))
+                            # write_txt("E:\\bReadyWorking\\gothonweb\\bin\\log1.txt", str(e), 'utf8')
+
+            except Exception as e:
+                print('get_contents error1:' + str(e))
+        if len(ArgLst) > 0:
+            DingPostMarkDown("新消息来啦", ArgLst)
+    except Exception as e:
+        print('get_contents error:' + str(e))
 
 
 def get_onpage(chapter, cookiesStr):
@@ -214,6 +226,52 @@ def DingDingPost(title, content, picUrl, comments, argUrl):
         requests.post(DingPost_url, data=json.dumps(data), headers=headers)
     except Exception as e:
         print('DingDingPost error:' + str(e))
+
+
+def DingPostMarkDown(title, textLst):
+    try:
+        text = ""
+        for i in textLst:
+            text += i
+        if len(text) > 0:
+            data = {
+                "msgtype": "markdown",
+                "markdown": {
+                    "title": title,
+                    "text": text
+                }
+            }
+            # 使用post请求推送消息
+            requests.post(DingPost_url, data=json.dumps(data), headers=headers)
+    except Exception as e:
+        print('DingPostMarkDown error:' + str(e))
+
+
+def GetDingMarkDownText(title, content, comments, messageURL, picURL):
+    try:
+        timeStr = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+        if len(picURL) == 0:
+            text = "# " + title + " \n" + "## " + content + "  \n" + "* " + comments + " \n " + "> ###### " + str(
+                timeStr) + "获取 [原文](" + messageURL + ") \n \n"
+        else:
+            text = "# " + title + " \n" + "## " + content + "  \n" + "* " + comments + " \n " + "![screen](" + picURL + ") \n" + "> ###### " + str(
+                timeStr) + "获取 [原文](" + messageURL + ") \n \n"
+        return text
+    except Exception as e:
+        print('GetDingMarkDownText error:' + str(e))
+    return ""
+
+
+def GetDingFcardLinks(title, messageURL, picURL):
+    dic = {"title": title, "messageURL": messageURL, "picURL": picURL}
+    return dic
+
+
+def DingPostFcard(links):
+    data1 = {"feedCard": {"links": links}, "msgtype": "feedCard"}
+    # 使用post请求推送消息
+    x = requests.post(DingPost_url, data=json.dumps(data1), headers=headers)
+    print("post rlt:" + x.text)
 
 
 def main():
