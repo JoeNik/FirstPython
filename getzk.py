@@ -1,7 +1,7 @@
 import json
 import requests
 from bs4 import BeautifulSoup
-import time
+import time, logUntil
 from urllib import request
 
 headers = {
@@ -22,6 +22,8 @@ isPostToDing = 1
 lstExistArg = []
 lstErrorArg = []  # 已删除获取权限过高的帖子集合
 
+log = logUntil.logs()
+
 
 def isExistLst(value):
     try:
@@ -35,7 +37,7 @@ def isExistLst(value):
         if len(lstExistArg) > 30:
             del lstExistArg[0:10]
     except Exception as e:
-        print('isExistLst error:' + str(e))
+        log.error('isExistLst error:' + str(e))
 
 
 def isExistErrorLst(value):
@@ -49,7 +51,7 @@ def isExistErrorLst(value):
         if len(lstErrorArg) > 20:
             del lstErrorArg[0:1]
     except Exception as e:
-        print('isExistErrorLst error:' + str(e))
+        log.error('isExistErrorLst error:' + str(e))
 
 
 def get_contents(chapter):
@@ -88,7 +90,7 @@ def get_contents(chapter):
                         c = each.select('tr')
                         # print(each)
                         # write_txt("E:\\bReadyWorking\\gothonweb\\bin\\log.txt", str(each), 'utf8')
-                        print(1 + len(c))
+                        log.debug(1 + len(c))
                         for d in c:
                             e = d.find_all('th')
                             for f in e:
@@ -122,10 +124,10 @@ def get_contents(chapter):
                                             (remark, comments, picurl) = get_onpage(argUrl, cookiestrHead)
                                             for key in keyword:
                                                 if ftitleTemp.find(key) != -1:
-                                                    print("匹配:" + key)
+                                                    log.debug("匹配:" + key)
                                                     if not isExistLst(ftitleTemp):
                                                         if isPostToDing == 1:
-                                                            print("send " + ftitleTemp)
+                                                            log.debug("send " + ftitleTemp)
                                                             # DingDingPost(ftitleTemp, remark, picurl, comments,
                                                             #              w.get('href'))
                                                             ArgLst.append(
@@ -149,11 +151,11 @@ def get_contents(chapter):
                             # write_txt("E:\\bReadyWorking\\gothonweb\\bin\\log1.txt", str(e), 'utf8')
 
             except Exception as e:
-                print('get_contents error1:' + str(e))
+                log.error('get_contents error1:' + str(e))
         if len(ArgLst) > 0:
             DingPostMarkDown("新消息来啦", ArgLst)
     except Exception as e:
-        print('get_contents error:' + str(e))
+        log.error('get_contents error:' + str(e))
 
 
 def get_onpage(chapter, cookiesStr):
@@ -174,8 +176,8 @@ def get_onpage(chapter, cookiesStr):
         # write_txt("E:\\bReadyWorking\\gothonweb\\bin\\log2.html", str(soup), 'gbk')
         # content1 = soup.find('td', class_='t_f').text
         if (title == '提示信息 -  赚客吧'):
-            print(title)
-            print('session 过期或 权限不足，请重新获取')
+            log.debug(title)
+            log.debug('session 过期或 权限不足，请重新获取')
             # wx.MessageBox("error", 'session 过期，请重新获取', wx.YES_NO)
             return ''
         else:
@@ -198,7 +200,7 @@ def get_onpage(chapter, cookiesStr):
             return (remarks, '|'.join(commentsStr), picUrl)
             # print(content1)
     except Exception as e:
-        print('get_onpage error:' + str(e))
+        log.error('get_onpage error:' + str(e))
 
 
 def DingDingPost(title, content, picUrl, comments, argUrl):
@@ -225,7 +227,7 @@ def DingDingPost(title, content, picUrl, comments, argUrl):
         # 使用post请求推送消息
         requests.post(DingPost_url, data=json.dumps(data), headers=headers)
     except Exception as e:
-        print('DingDingPost error:' + str(e))
+        log.error('DingDingPost error:' + str(e))
 
 
 def DingPostMarkDown(title, textLst):
@@ -242,9 +244,10 @@ def DingPostMarkDown(title, textLst):
                 }
             }
             # 使用post请求推送消息
-            requests.post(DingPost_url, data=json.dumps(data), headers=headers)
+            x = requests.post(DingPost_url, data=json.dumps(data), headers=headers)
+            log.debug("post rlt:" + x.text)
     except Exception as e:
-        print('DingPostMarkDown error:' + str(e))
+        log.error('DingPostMarkDown error:' + str(e))
 
 
 def GetDingMarkDownText(title, content, comments, messageURL, picURL):
@@ -258,7 +261,7 @@ def GetDingMarkDownText(title, content, comments, messageURL, picURL):
                 timeStr) + "获取 [原文](" + messageURL + ") \n \n"
         return text
     except Exception as e:
-        print('GetDingMarkDownText error:' + str(e))
+        log.error('GetDingMarkDownText error:' + str(e))
     return ""
 
 
@@ -271,15 +274,18 @@ def DingPostFcard(links):
     data1 = {"feedCard": {"links": links}, "msgtype": "feedCard"}
     # 使用post请求推送消息
     x = requests.post(DingPost_url, data=json.dumps(data1), headers=headers)
-    print("post rlt:" + x.text)
+    log.debug("post rlt:" + x.text)
 
 
 def main():
     while True:
-        print("*****************begin*********************")
-        get_contents(server)
-        print(str(time.ctime()) + "  获取数据完毕")
-        time.sleep(10)
+        try:
+            log.debug("*****************begin*********************")
+            get_contents(server)
+            log.debug(str(time.ctime()) + "  获取数据完毕")
+            time.sleep(10)
+        except Exception as e:
+            log.error('main error:' + str(e))
 
 
 if __name__ == '__main__':
