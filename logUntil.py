@@ -3,12 +3,11 @@
 import logging
 
 import logging.handlers
-import sys
+import re
 
 import time
 
 import os
-
 
 class logs(object):
 
@@ -32,7 +31,8 @@ class logs(object):
 
         # 创建文件目录
 
-        logs_dir = sys.path[0] + "\\logs\\"
+        #logs_dir = sys.path[0] + "\\logs\\"
+        logs_dir = os.getcwd() + "\\logs\\"
 
         if os.path.exists(logs_dir) and os.path.isdir(logs_dir):
 
@@ -49,12 +49,24 @@ class logs(object):
         logfilename = '%s.txt' % timestamp
 
         logfilepath = os.path.join(logs_dir, logfilename)
-
-        rotatingFileHandler = logging.handlers.RotatingFileHandler(filename=logfilepath,
-
-                                                                   maxBytes=1024 * 1024 * 50,
-
-                                                                   backupCount=5)
+        #参考 https://blog.csdn.net/ashi198866/article/details/46725813
+        # RotatingFileHandler
+        # log_file_handler = TimedRotatingFileHandler(filename="ds_update", when="M", interval=2, backupCount=2)
+        # “S”: Seconds
+        # “M”: Minutes
+        # “H”: Hours
+        # “D”: Days
+        # “W”: Week day(0 = Monday) “midnight”: Roll over at midnight
+        rotatingFileHandler = logging.handlers.TimedRotatingFileHandler(filename=logs_dir+"Run.log", when="D",
+                                                                        interval=1,
+                                                                        backupCount=2)
+        rotatingFileHandler.suffix = "%Y-%m-%d.log"
+        rotatingFileHandler.extMatch = re.compile(r"^\d{4}-\d{2}-\d{2}.log$")
+        # rotatingFileHandler = logging.handlers.RotatingFileHandler(filename=logfilepath,
+        #
+        #                                                            maxBytes=1024 * 1024 * 50,
+        #
+        #                                                            backupCount=5)
 
         # 设置输出格式
 
@@ -66,7 +78,8 @@ class logs(object):
 
         console = logging.StreamHandler()
 
-        console.setLevel(logging.NOTSET)
+        # 设置级别
+        console.setLevel(logging.INFO)
 
         console.setFormatter(formatter)
 
@@ -76,7 +89,7 @@ class logs(object):
 
         self.logger.addHandler(console)
 
-        self.logger.setLevel(logging.NOTSET)
+        self.logger.setLevel(logging.INFO)
 
     def info(self, message):
 
@@ -93,7 +106,6 @@ class logs(object):
     def error(self, message):
 
         self.logger.error(message)
-
 
 # if __name__ == '__main__':
 #     logger = logs()
