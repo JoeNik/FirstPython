@@ -366,7 +366,7 @@ def get_des_psswd(data, key):
         # return (ctx.call('do_encrypt_rc4', data, key))  # 调用js方法  第一个参数是JS的方法名，后面的data和key是js方法的参数
     # return execjs.compile(open(r"E:\\bReadyWorking\\gothonweb\\bin\\loginCheck.js").read().decode("utf-8")).call('do_encrypt_rc4', data,key)
     except Exception as e:
-        print('GetDingMarkDown error:' + str(e))
+        log.error('GetDingMarkDown error:' + str(e))
 
 
 def login():
@@ -403,17 +403,17 @@ def login():
         # 如果登录成功，cookjar自动保存cookie
         opener.open(login_request)
         for ck in cook_jar:
-            print("cookie:" + ck)
+            log.info("cookie:" + ck)
     except Exception as e:
-        print('login error:' + str(e))
+        log.info('login error:' + str(e))
 
 
 def loginThd():
     while True:
         try:
             # 范围时间
-            d_time = datetime.datetime.strptime(str(datetime.datetime.now().date()) + '08:50', '%Y-%m-%d%H:%M')
-            d_time1 = datetime.datetime.strptime(str(datetime.datetime.now().date()) + '08:53', '%Y-%m-%d%H:%M')
+            d_time = datetime.datetime.strptime(str(datetime.datetime.now().date()) + '01:00', '%Y-%m-%d%H:%M')
+            d_time1 = datetime.datetime.strptime(str(datetime.datetime.now().date()) + '01:03', '%Y-%m-%d%H:%M')
 
             # 当前时间
             n_time = datetime.datetime.now()
@@ -423,7 +423,7 @@ def loginThd():
                 log.info("login ")
                 login()
         except Exception as e:
-            print('loginThd error:' + str(e))
+            log.error('loginThd error:' + str(e))
         time.sleep(100)
 
 
