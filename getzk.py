@@ -402,8 +402,10 @@ def login():
         login_request = urllib.request.Request(login_url, headers=headers2, data=login_str)
         # 如果登录成功，cookjar自动保存cookie
         opener.open(login_request)
-        for ck in cook_jar:
-            log.info("cookie:" + ck)
+        cookieStr = ''
+        for item in cook_jar:
+            cookieStr = cookieStr + item.name + '=' + item.value + ';'
+        log.info("cookie:" + cookieStr)
     except Exception as e:
         log.info('login error:' + str(e))
 
