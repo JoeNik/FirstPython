@@ -205,7 +205,7 @@ def get_onpage(chapter, cookiesStr):
         else:
             title = str(title)
             titlpos = "撒果" in title
-            if not titlpos:
+            if titlpos:
                 try:
                     form = soup.find('form', id='scbar_form')
                     formhash = form.find('input', attrs={'name': 'formhash'}).get('value')
@@ -222,42 +222,9 @@ def get_onpage(chapter, cookiesStr):
                         tid = chapter[tpos + 4:]
                     if not tid == "":
                         millis = int(round(time.time() * 1000))
-                        response_form_data = {
-                            "message": "1",
-                            "posttime": millis,
-                            "formhash": formhash,
-                            "usesig": "1",
-                            "subject": "  ",
-                            "connect_publish_t": 0
-                        }
-
-
-
-
-                        # 1.3 发送登录请求POST
-                        cook_jar = cookiejar.CookieJar()
-                        # 定义有添加 cook 功能的 处理器
-                        cook_hanlder = urllib.request.HTTPCookieProcessor(cook_jar)
-                        # 根据处理器 生成 opener
-                        opener = urllib.request.build_opener(cook_hanlder)
-
-                        # 带着参数 发送post请求
-                        # 添加请求头
-                        headers2 = {
-                            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.25 Safari/537.36 Core/1.70.3650.400 QQBrowser/10.4.3341.400",
-                            "Content - Type": "application / x - www - form - urlencoded",
-                            "Cookie": cookiestrHead}
-
-                        # 1 参数 将来 需要转译 转码； 2 post 请求的 data 要求是bytes
-                        response_str = parse.urlencode(response_form_data).encode('utf-8')
-                        responseUrl = 'http://www.zuanke8.com/forum.php?mod=post&action=reply&fid=15&tid=' + tid + '&extra=&replysubmit=yes&infloat=yes&handlekey=fastpost&inajax=1'
-                        #login_request = urllib.request.Request(responseUrl, headers=headers2, data=response_str)
-                        res1 = requests.post(responseUrl,response_str,headers=headers2)
-                        # 如果登录成功，cookjar自动保存cookie
-                        #opener.open(response_str)
-                        # for item in cook_jar:
-                        #     cookieStr = cookieStr + item.name + '=' + item.value + ';'
-                        # print("撒果 cookie:" + cookieStr)
+                        # responseUrl = 'http://www.zuanke8.com/forum.php?mod=post&action=reply&fid=15&tid=' + tid + '&extra=&replysubmit=yes&infloat=yes&handlekey=fastpost&inajax=1'
+                        # login_request = urllib.request.Request(responseUrl, headers=headers2, data=response_str)
+                    reply(tid, "1", millis, formhash)
                 except Exception as e:
                     print('撒果回复error:' + str(e))
             # content1 = soup.find('td', class_='t_f').text
@@ -279,6 +246,29 @@ def get_onpage(chapter, cookiesStr):
             # print(content1)
     except Exception as e:
         print('error:' + str(e))
+
+
+def reply(tid, message, millis, formhash):
+    try:
+        postdata = {
+            "message": message,
+            "posttime": millis,
+            "formhash": formhash+"1",
+            "usesig": "1",
+            "subject": "  ",
+            "connect_publish_t": 0
+        }
+        # 添加请求头
+        headers2 = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.25 Safari/537.36 Core/1.70.3650.400 QQBrowser/10.4.3341.400",
+            "Content - Type": "application / x - www - form - urlencoded",
+            "Cookie": cookiestrHead}
+        # base_url = config.REPLYURL
+        base_url = r'http://www.zuanke8.com/forum.php?mod=post&action=reply&tid=TID&extra=&replysubmit=yes'
+        url = base_url.replace('TID', tid)
+        res1 = requests.post(url, postdata, headers=headers2)
+    except Exception as e:
+        print("error:"+str(e))
 
 
 # get_onpage("http://www.zuanke8.com/thread-6702621-1-1.html", cookiestrHead)

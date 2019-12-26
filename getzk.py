@@ -56,6 +56,30 @@ log = logUntil.logs()
 global failReqCnt
 
 
+# 回帖
+def reply(tid, message, millis, formhash):
+    try:
+        postdata = {
+            "message": message,
+            "posttime": millis,
+            "formhash": formhash,
+            "usesig": message,
+            "subject": "  ",
+            "connect_publish_t": 0
+        }
+        # 添加请求头
+        headers2 = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.25 Safari/537.36 Core/1.70.3650.400 QQBrowser/10.4.3341.400",
+            "Content - Type": "application / x - www - form - urlencoded",
+            "Cookie": cookiestrHead}
+        # base_url = config.REPLYURL
+        base_url = r'http://www.zuanke8.com/forum.php?mod=post&action=reply&tid=TID&extra=&replysubmit=yes'
+        url = base_url.replace('TID', tid)
+        res1 = requests.post(url, postdata, headers=headers2)
+    except Exception as e:
+        log.error("reply error:" + str(e))
+
+
 def isExistLst(value):
     try:
         # log.info("已推送帖个数:" + str(len(lstExistArg)))
@@ -226,6 +250,30 @@ def get_onpage(chapter, cookiesStr):
                 lstErrorArg.append(chapter)
             return ''
         else:
+            title = str(title)
+            titlpos = "撒果" in title
+            if titlpos:
+                try:
+                    form = soup.find('form', id='scbar_form')
+                    formhash = form.find('input', attrs={'name': 'formhash'}).get('value')
+                    tid = ''
+
+                    if 'thread-' in chapter:
+                        tpos = chapter.index('thread-')
+                        tmppid = chapter[tpos + 7:]
+                        tpos = tmppid.index('-')
+                        tid = tmppid[0:tpos]
+                    else:
+                        # http://www.zuanke8.com/forum.php?mod=viewthread&tid=6583253
+                        tpos = chapter.index('tid=')
+                        tid = chapter[tpos + 4:]
+                    if not tid == "":
+                        millis = int(round(time.time() * 1000))
+                        # responseUrl = 'http://www.zuanke8.com/forum.php?mod=post&action=reply&fid=15&tid=' + tid + '&extra=&replysubmit=yes&infloat=yes&handlekey=fastpost&inajax=1'
+                        reply(tid, "1", millis, formhash)
+                        log.debug('撒果回复:' + title)
+                except Exception as e:
+                    print('撒果回复error:' + str(e))
             # content1 = soup.find('td', class_='t_f').text
             comments = soup.find_all('td', 't_f')
             cnt = 0
