@@ -15,6 +15,7 @@ headers = {
     'Content-Type': 'application/json'}
 
 server = 'http://www.zuanke8.com/zuixin.php'
+# server = 'http://www.baidu.com'
 
 #  dingding请求地址
 DingPost_url = "https://oapi.dingtalk.com/robot/send?access_token=b63c5a144e9102029af7ef052c20150503441101f54dbb1c81a47285d56105d9"
@@ -23,13 +24,13 @@ cookiestrHead = r'ki1e_2132_connect_is_bind=1; ki1e_2132_smile=1D1; ki1e_2132_at
 keyword = ['速度', 'bug', '快', '水', '有了', '好价', '赶紧', '作业', '速撸', '撒果', '首发', '平行', '神价', '线报', '爱奇艺', '好莱坞', '周卡', '月卡',
            '可以', '冲', '招行抽奖']
 
-# 推送到钉钉
-isPostToDing = 1
-
 cfg = Config.ReadConfig()
+
+# 推送到钉钉
 isPostToDing = int(cfg.get_val("system", "isPostToDing", "1"))
 DingPost_url = cfg.get_val("system", "DingPost_url",
                            "https://oapi.dingtalk.com/robot/send?access_token=b63c5a144e9102029af7ef052c20150503441101f54dbb1c81a47285d56105d9")
+
 curPath = os.getcwd()
 if os.path.exists(curPath + "cookies.txt"):
     f = open(curPath + '\\cookies.txt')
@@ -51,10 +52,13 @@ lstErrorArg = []  # 已删除获取权限过高的帖子集合
 
 log = logUntil.logs()
 
+# 失败次数统计
+global failReqCnt
+
 
 def isExistLst(value):
     try:
-        log.info("已推送帖个数:" + str(len(lstExistArg)))
+        # log.info("已推送帖个数:" + str(len(lstExistArg)))
         # 帖子大于30就把前10条清空
         if len(lstExistArg) > 30:
             del lstExistArg[0:10]
@@ -70,22 +74,21 @@ def isExistLst(value):
 
 def isExistErrorLst(value):
     try:
-        log.info("权限帖个数:" + str(len(lstErrorArg)))
+        # log.info("权限帖个数:" + str(len(lstErrorArg)))
         lstErrorArgSet = set(lstErrorArg)
         if len(lstErrorArg) > 20:
             del lstErrorArg[0:1]
         if value in lstErrorArgSet:
             return True
         else:
-            #lstErrorArg.append(value)
+            # lstErrorArg.append(value)
             return False
-
-
     except Exception as e:
         log.error('isExistErrorLst error:' + str(e))
 
 
 def get_contents(chapter):
+    sucFlag = 0
     try:
         req = request.Request(chapter)
         # 设置cookie
@@ -113,6 +116,7 @@ def get_contents(chapter):
         ArgLst = []  # 文章信息列表
         firstArgTitle = ""
         for each in a:
+            sucFlag = 1
             try:
                 b = each.find('center')
                 # print('xxx:' + str(b))
@@ -153,12 +157,13 @@ def get_contents(chapter):
                                     else:
                                         argUrl = w.get('href')
                                         if not isExistErrorLst(argUrl):
-                                            (remark, comments, picurl) = get_onpage(argUrl, cookiestrHead)
                                             for key in keyword:
                                                 if ftitleTemp.find(key) != -1:
                                                     log.info("匹配:" + key)
                                                     if not isExistLst(ftitleTemp):
                                                         if isPostToDing == 1:
+                                                            (remark, comments, picurl) = get_onpage(argUrl,
+                                                                                                    cookiestrHead)
                                                             if len(ArgLst) == 0:
                                                                 firstArgTitle = ftitleTemp
                                                             log.info("send " + ftitleTemp)
@@ -190,8 +195,10 @@ def get_contents(chapter):
                 log.error('get_contents error1:' + str(e))
         if len(ArgLst) > 0:
             DingPostMarkDown(firstArgTitle, ArgLst)
+        return sucFlag
     except Exception as e:
         log.error('get_contents error:' + str(e))
+        return sucFlag
 
 
 def get_onpage(chapter, cookiesStr):
@@ -371,6 +378,7 @@ def get_des_psswd(data, key):
 
 def login():
     try:
+        log.info("login ")
         millis = int(round(time.time() * 1000))
         # psw = js2pyTest("123456", millis)
         psw = get_des_psswd("123456", millis)
@@ -422,23 +430,40 @@ def loginThd():
 
             # 判断当前时间是否在范围时间内
             if n_time > d_time and n_time < d_time1:
-                log.info("login ")
                 login()
         except Exception as e:
             log.error('loginThd error:' + str(e))
         time.sleep(100)
 
 
-def main():
-    threading.Thread(target=loginThd, args=()).start()
+def GetContentThd():
+    failReqCnt = 0
     while True:
         try:
             log.info("*****************begin*********************")
-            get_contents(server)
+            if get_contents(server) == 0:
+                failReqCnt = failReqCnt + 1
+            else:
+                failReqCnt = 0
+            if failReqCnt >= 400:
+                login()
             log.info(str(time.ctime()) + "  获取数据完毕")
         except Exception as e:
             log.error('main error:' + str(e))
         time.sleep(10)
+
+
+def main():
+    threading.Thread(target=loginThd, args=()).start()
+    threading.Thread(target=GetContentThd, args=()).start()
+    while True:
+        try:
+            log.info("*****************心跳维持*********************")
+            log.info("已推送帖个数:" + str(len(lstExistArg)))
+            log.info("权限帖个数:" + str(len(lstErrorArg)))
+        except Exception as e:
+            log.error('main error:' + str(e))
+        time.sleep(60 * 60)
 
 
 if __name__ == '__main__':

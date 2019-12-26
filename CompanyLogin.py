@@ -107,6 +107,7 @@ def main():
     log.info("login begin")
     login()
     log.info("login end")
+    time.sleep(10)
 
 
 if __name__ == '__main__':

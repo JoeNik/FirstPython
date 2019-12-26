@@ -6,7 +6,7 @@ import time
 from http import cookiejar  # 保存cookie用的
 from urllib import parse  # 转译
 import urllib.request  # 请求库
-import execjs,js2py
+import execjs, js2py
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36',
@@ -22,11 +22,12 @@ def get_des_psswd(data, key):
         jsstr = get_js()
         ctx = execjs.compile(jsstr)  # 加载JS文件
         return (ctx.call('do_encrypt_rc4', data, key))  # 调用js方法  第一个参数是JS的方法名，后面的data和key是js方法的参数
-       #return execjs.compile(open(r"E:\\bReadyWorking\\gothonweb\\bin\\loginCheck.js").read().decode("utf-8")).call('do_encrypt_rc4', data,key)
+    # return execjs.compile(open(r"E:\\bReadyWorking\\gothonweb\\bin\\loginCheck.js").read().decode("utf-8")).call('do_encrypt_rc4', data,key)
     except Exception as e:
         print('GetDingMarkDown error:' + str(e))
 
-def js2pyTest(src,key):
+
+def js2pyTest(src, key):
     try:
         data = open('E:\\bReadyWorking\\gothonweb\\bin\\loginCheck.js', 'r', encoding='utf8').read()
 
@@ -37,7 +38,6 @@ def js2pyTest(src,key):
         print(data(src, key))
     except Exception as e:
         print('js2pyTest error:' + str(e))
-
 
 
 def get_js():
@@ -53,9 +53,9 @@ def get_js():
         print('GetDingMarkDown error:' + str(e))
 
 
-#current_milli_time = lambda: int(round(time.time() * 1000))
-millis = int(round(time.time() * 1000))
-psw = js2pyTest("123456", millis)
+# current_milli_time = lambda: int(round(time.time() * 1000))
+# millis = int(round(time.time() * 1000))
+# psw = js2pyTest("123456", millis)
 
 # 1.代码登录
 # 1.1 登录的网址
@@ -71,21 +71,23 @@ login_form_data = {
 
 
 # 1.3 发送登录请求POST
-cook_jar = cookiejar.CookieJar()
+# cook_jar = cookiejar.CookieJar()
 # 定义有添加 cook 功能的 处理器
-cook_hanlder = urllib.request.HTTPCookieProcessor(cook_jar)
+# cook_hanlder = urllib.request.HTTPCookieProcessor(cook_jar)
 # 根据处理器 生成 opener
-opener = urllib.request.build_opener(cook_hanlder)
+# opener = urllib.request.build_opener(cook_hanlder)
 
 # 带着参数 发送post请求
 # 添加请求头
 headers2 = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.25 Safari/537.36 Core/1.70.3650.400 QQBrowser/10.4.3341.400"}
+
+
 # 1 参数 将来 需要转译 转码； 2 post 请求的 data 要求是bytes
-login_str = parse.urlencode(login_form_data).encode('utf-8')
-login_request = urllib.request.Request(login_url, headers=headers2, data=login_str)
+# login_str = parse.urlencode(login_form_data).encode('utf-8')
+# login_request = urllib.request.Request(login_url, headers=headers2, data=login_str)
 # 如果登录成功，cookjar自动保存cookie
-opener.open(login_request)
+# opener.open(login_request)
 
 
 def get_contents(chapter):
@@ -188,9 +190,7 @@ def get_onpage(chapter, cookiesStr):
         # 设置请求头
         req.add_header('User-Agent',
                        'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36')
-
         resp = request.urlopen(req)
-
         rlt = resp.read().decode('gbk')
         soup = BeautifulSoup(rlt, 'html.parser')
 
@@ -203,6 +203,63 @@ def get_onpage(chapter, cookiesStr):
             wx.MessageBox("error", 'session 过期，请重新获取', wx.YES_NO)
             return ''
         else:
+            title = str(title)
+            titlpos = "撒果" in title
+            if not titlpos:
+                try:
+                    form = soup.find('form', id='scbar_form')
+                    formhash = form.find('input', attrs={'name': 'formhash'}).get('value')
+                    tid = ''
+
+                    if 'thread-' in chapter:
+                        tpos = chapter.index('thread-')
+                        tmppid = chapter[tpos + 7:]
+                        tpos = tmppid.index('-')
+                        tid = tmppid[0:tpos]
+                    else:
+                        # http://www.zuanke8.com/forum.php?mod=viewthread&tid=6583253
+                        tpos = chapter.index('tid=')
+                        tid = chapter[tpos + 4:]
+                    if not tid == "":
+                        millis = int(round(time.time() * 1000))
+                        response_form_data = {
+                            "message": "1",
+                            "posttime": millis,
+                            "formhash": formhash,
+                            "usesig": "1",
+                            "subject": "  ",
+                            "connect_publish_t": 0
+                        }
+
+
+
+
+                        # 1.3 发送登录请求POST
+                        cook_jar = cookiejar.CookieJar()
+                        # 定义有添加 cook 功能的 处理器
+                        cook_hanlder = urllib.request.HTTPCookieProcessor(cook_jar)
+                        # 根据处理器 生成 opener
+                        opener = urllib.request.build_opener(cook_hanlder)
+
+                        # 带着参数 发送post请求
+                        # 添加请求头
+                        headers2 = {
+                            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.25 Safari/537.36 Core/1.70.3650.400 QQBrowser/10.4.3341.400",
+                            "Content - Type": "application / x - www - form - urlencoded",
+                            "Cookie": cookiestrHead}
+
+                        # 1 参数 将来 需要转译 转码； 2 post 请求的 data 要求是bytes
+                        response_str = parse.urlencode(response_form_data).encode('utf-8')
+                        responseUrl = 'http://www.zuanke8.com/forum.php?mod=post&action=reply&fid=15&tid=' + tid + '&extra=&replysubmit=yes&infloat=yes&handlekey=fastpost&inajax=1'
+                        #login_request = urllib.request.Request(responseUrl, headers=headers2, data=response_str)
+                        res1 = requests.post(responseUrl,response_str,headers=headers2)
+                        # 如果登录成功，cookjar自动保存cookie
+                        #opener.open(response_str)
+                        # for item in cook_jar:
+                        #     cookieStr = cookieStr + item.name + '=' + item.value + ';'
+                        # print("撒果 cookie:" + cookieStr)
+                except Exception as e:
+                    print('撒果回复error:' + str(e))
             # content1 = soup.find('td', class_='t_f').text
             comments = soup.find_all('td', 't_f')
             cnt = 0
@@ -217,13 +274,15 @@ def get_onpage(chapter, cookiesStr):
                     commentsStr.append(comment.text)
                 cnt = cnt + 1
                 # print(comment.text)
+
             return (remarks, '|'.join(commentsStr))
             # print(content1)
     except Exception as e:
         print('error:' + str(e))
 
 
-get_onpage("http://www.zuanke8.com/thread-6702621-1-1.html", cookiestrHead)
+# get_onpage("http://www.zuanke8.com/thread-6702621-1-1.html", cookiestrHead)
+get_onpage("http://www.zuanke8.com/forum.php?mod=viewthread&tid=6583253", cookiestrHead)
 
 
 def DingDingPost(title, content, picUrl, comments):
@@ -366,12 +425,11 @@ def DingPostTest():
     # x = requests.post(DingPost_url, data=json.dumps(data1), headers=headers)
     # print("post rlt:" + x.text)
 
-
 # DingDingPost("大标题", "内容测试", "https://p0.ssl.qhimg.com/t0170483da9aa036e6c.png", "评论测试")
 # DingPostTest()
-text = GetDingMarkDownText("测试标题1", "这是一本正经的内容", "这是一条很长的评论", "http://www.baidu.com",
-                           "https://p0.ssl.qhimg.com/t0170483da9aa036e6c.png")
-text2 = GetDingMarkDownText("测试标题2222222222222222222", "这是一本正经的内容22222222222", "这是一条很长的评论22222222222222",
-                            "http://www.baidu.com", "https://p0.ssl.qhimg.com/t0170483da9aa036e6c.png")
-text3 = text + text2
-DingPostMarkDown("新消息来了", text3)
+# text = GetDingMarkDownText("测试标题1", "这是一本正经的内容", "这是一条很长的评论", "http://www.baidu.com",
+#                            "https://p0.ssl.qhimg.com/t0170483da9aa036e6c.png")
+# text2 = GetDingMarkDownText("测试标题2222222222222222222", "这是一本正经的内容22222222222", "这是一条很长的评论22222222222222",
+#                             "http://www.baidu.com", "https://p0.ssl.qhimg.com/t0170483da9aa036e6c.png")
+# text3 = text + text2
+# DingPostMarkDown("新消息来了", text3)
