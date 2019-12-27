@@ -183,8 +183,8 @@ def get_contents(chapter):
                                         if not isExistErrorLst(argUrl):
                                             for key in keyword:
                                                 if ftitleTemp.find(key) != -1:
-                                                    log.info("匹配:" + key)
                                                     if not isExistLst(ftitleTemp):
+                                                        log.info("匹配:" + key)
                                                         if isPostToDing == 1:
                                                             (remark, comments, picurl) = get_onpage(argUrl,
                                                                                                     cookiestrHead)
@@ -498,7 +498,7 @@ def GetContentThd():
             log.info(str(time.ctime()) + "  获取数据完毕")
         except Exception as e:
             log.error('main error:' + str(e))
-        time.sleep(10)
+        time.sleep(8)
 
 
 def main():
