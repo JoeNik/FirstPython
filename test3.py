@@ -2,6 +2,7 @@ import _thread
 import json
 import threading
 import time
+import urllib
 import webbrowser
 import win32gui
 
@@ -9,7 +10,7 @@ import requests
 import win32con
 import wx, os, win32api
 import pyperclip
-from urllib import request
+from urllib import request, parse
 
 from bs4 import BeautifulSoup
 
@@ -34,7 +35,6 @@ isPostToDing = 1
 isShowCapture = 0
 global frame
 global t
-
 
 class MyFrame(wx.Frame):
     def __init__(self, parent, id, title, size):
@@ -318,7 +318,7 @@ def get_data(threadName, delay):
     while True:
         get_contents(server)
         print(str(time.ctime()) + "  获取数据完毕")
-        time.sleep(10)
+        time.sleep(200)
 
 
 def hello(id, times):
